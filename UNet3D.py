@@ -8,8 +8,12 @@ def double_conv(in_chan, out_chan):
     # padding to keep the image size the same throughout
     conv = nn.Sequential(
         nn.Conv3d(in_chan, out_chan, kernel_size=(3,3,3),stride=(1,1,1), padding=1),
+        nn.BatchNorm2d(out_chan),
+        nn.Dropout3d(p=0.25,inplace=True),
         nn.ReLU(inplace=True),
         nn.Conv3d(out_chan, out_chan, kernel_size=(3,3,3),stride=(1,1,1), padding=1),
+        nn.Dropout3d(p=0.25, inplace=True),
+        nn.BatchNorm2d(out_chan),
         nn.ReLU(inplace=True),
     )
     return conv
@@ -151,7 +155,7 @@ class UNet(nn.Module):
     
     
 if __name__ == "__main__":
-    image = torch.rand((1, 1, 197, 233, 189))
-    # image = torch.rand((1, 1, 96, 96, 96))
+#     image = torch.rand((1, 1, 197, 233, 189))
+    image = torch.rand((1, 1, 96, 96, 96))
     model = UNet()
     model(image)
