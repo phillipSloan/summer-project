@@ -8,19 +8,21 @@ def double_conv(in_chan, out_chan):
     # padding to keep the image size the same throughout
     conv = nn.Sequential(
         nn.Conv3d(in_chan, out_chan, kernel_size=(3,3,3),stride=(1,1,1), padding=1),
-        nn.BatchNorm2d(out_chan),
+        nn.BatchNorm3d(out_chan),
         nn.Dropout3d(p=0.25,inplace=True),
         nn.ReLU(inplace=True),
         nn.Conv3d(out_chan, out_chan, kernel_size=(3,3,3),stride=(1,1,1), padding=1),
         nn.Dropout3d(p=0.25, inplace=True),
-        nn.BatchNorm2d(out_chan),
+        nn.BatchNorm3d(out_chan),
         nn.ReLU(inplace=True),
     )
     return conv
 
 # for 3D
 def resize_tensor(tensor, resize_to_this):
+    import torch
     from torchvision import transforms as transforms
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     target_size = resize_to_this.size()
     b,c,x,y,z = target_size
@@ -39,7 +41,7 @@ def resize_tensor(tensor, resize_to_this):
             n = transform2(n)
             n = torch.transpose(n, 0, 1)
             new_tensor[i][j] = n
-    return new_tensor 
+    return new_tensor.to(device)
 
 # # for 2D
 # def resize_tensor(tensor, resize_to_this):
@@ -96,60 +98,41 @@ class UNet(nn.Module):
     
     def forward(self, image):
         # Going down! 
-        print(image.shape)
         x = self.down_conv_1(image)
-        print(x.shape)
         x1 = x # Storing for skip connection 1
         x = self.max_pooling(x)
-        print(x.shape)
+        
         x = self.down_conv_2(x)
-        print(x.shape)
         x2 = x # Storing for skip connection 2
         x = self.max_pooling(x)
-        print(x.shape)
+        
         x = self.down_conv_3(x)
-        print(x.shape)
         x3 = x # Storing for skip connection 3
         x = self.max_pooling(x)
-        print(x.shape)
+        
         x = self.down_conv_4(x)
-        print(x.shape)
         x4 = x # Storing for skip connection 4
         x = self.max_pooling(x)
-        print(x.shape)
-        x = self.down_conv_5(x)
-        print(x.shape)
         
-  
+        x = self.down_conv_5(x)
         # and back up again!
         x = self.up_trans_1(x)
-        print(x.shape)
-        x4 = resize_tensor(x4, x) # Resize x4 to be same size as x
+
         x = self.up_conv_1(torch.cat([x, x4], 1))
-        print(x.shape)
-        
+
         x = self.up_trans_2(x)
-        print(x.shape)
-        x3 = resize_tensor(x3, x) # Resize x3 to be same size as x
+
         x = self.up_conv_2(torch.cat([x, x3], 1))
-        print(x.shape)
+
         
         x = self.up_trans_3(x)
-        print(x.shape)
-        x2 = resize_tensor(x2, x) # Resize x2 to be same size as x
+
         x = self.up_conv_3(torch.cat([x, x2], 1))
-        print(x.shape)
-        
         x = self.up_trans_4(x)
-        print(x.shape)
-        x1 = resize_tensor(x1, x) # Resize x1 to be same size as x
+
         x = self.up_conv_4(torch.cat([x, x1], 1))
-        print(x.shape)
-        
         x = self.output(x)
-        print(x.shape)
         x = resize_tensor(x,image)
-        print(x.shape)
         return x
     
     

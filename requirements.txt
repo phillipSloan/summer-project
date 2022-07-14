@@ -3,11 +3,9 @@ torch
 torchvision
 pytorch-ignite
 tqdm
-Monai
+monai
 bids
 matplotlib
 jupyter
 jupyterlab
 nibabel
-wget
-git+https://github.com/npnl/bidsio
