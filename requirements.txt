@@ -1,0 +1,13 @@
+numpy
+torch
+torchvision
+pytorch-ignite
+tqdm
+Monai==0.9
+bids
+matplotlib
+jupyter
+jupyterlab
+nibabel
+wget
+git+https://github.com/npnl/bidsio
